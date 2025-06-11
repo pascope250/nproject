@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = "mysql://root@localhost:3306/bobbies"
+}
+
+model categories {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  movies    movies[]
+}
+
+model commentlike {
+  id        Int      @id @default(autoincrement())
+  commentId Int
+  ip        String
+  createdAt DateTime @default(now())
+  comments  comments @relation(fields: [commentId], references: [id], map: "CommentLike_commentId_fkey")
+   @@unique([commentId, ip])
+  @@index([commentId], map: "CommentLike_commentId_fkey")
+}
+
+model comments {
+  id          Int           @id @default(autoincrement())
+  movieId     Int
+  userName    String
+  comment     String
+  commentLike Int           @default(0)
+  createdAt   DateTime      @default(now())
+  commentlike commentlike[]
+  movies      movies        @relation(fields: [movieId], references: [id], map: "Comments_movieId_fkey")
+  replies     replies[]
+
+  @@index([movieId], map: "Comments_movieId_fkey")
+}
+
+model contacts {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model inquiries {
+  id        Int      @id @default(autoincrement())
+  name      String
+  company   String
+  email     String
+  phone     String
+  budget    String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model movies {
+  id          Int        @id @default(autoincrement())
+  categoryId  Int
+  title       String
+  year        Int
+  rating      Float
+  description String
+  poster      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime       @default(now())
+  comments    comments[]
+  category  categories @relation(fields: [categoryId], references: [id], map: "Movies_categoryId_fkey")
+  sources     sources[]
+
+  @@index([categoryId], map: "Movies_categoryId_fkey")
+}
+
+model notification {
+  id                Int                 @id @default(autoincrement())
+  title             String              @db.VarChar(255)
+  message           String
+  is_read           Boolean             @default(false)
+  url               String?             @db.VarChar(512)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())
+  usernotifications usernotifications[]
+}
+
+model replies {
+  id         Int          @id @default(autoincrement())
+  commentId  Int
+  userName   String
+  content    String
+  replyLike  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  comments   comments     @relation(fields: [commentId], references: [id], map: "Replies_commentId_fkey")
+  replylikes replylikes[]
+
+  @@index([commentId], map: "Replies_commentId_fkey")
+}
+
+model replylikes {
+  id      Int     @id @default(autoincrement())
+  replyId Int
+  ip      String
+  replies replies @relation(fields: [replyId], references: [id], map: "ReplyLikes_replyId_fkey")
+
+  @@index([replyId], map: "ReplyLikes_replyId_fkey")
+}
+
+model sources {
+  id      Int    @id @default(autoincrement())
+  movieId Int
+  name    String
+  domain  String
+  type    String
+  part    Int
+  baseUrl String
+  movies  movies @relation(fields: [movieId], references: [id], map: "Sources_movieId_fkey")
+
+  @@index([movieId], map: "Sources_movieId_fkey")
+}
+
+model subscription {
+  id                Int                 @id @default(autoincrement())
+  endpoint          String              @unique(map: "Subscription_endpoint_key")
+  p256dh_key        String              @db.VarChar(256)
+  auth_key          String              @db.VarChar(256)
+  browser_id        String              @db.VarChar(64)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())
+  usernotifications usernotifications[]
+
+  @@index([browser_id], map: "idx_browser_id")
+}
+
+model usernotifications {
+  id             Int          @id @default(autoincrement())
+  subscriptionId Int
+  notificationId Int
+  is_read        Boolean      @default(false)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @default(now())
+  notification   notification @relation(fields: [notificationId], references: [id], map: "UserNotifications_notificationId_fkey")
+  subscription   subscription @relation(fields: [subscriptionId], references: [id], map: "UserNotifications_subscriptionId_fkey")
+
+  @@index([notificationId], map: "UserNotifications_notificationId_fkey")
+  @@index([subscriptionId], map: "UserNotifications_subscriptionId_fkey")
+}
+
+model users {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique(map: "Users_email_key")
+  password  String
+  createdAt DateTime @default(now())
+}
