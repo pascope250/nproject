@@ -1,11 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = "mysql://root@localhost:3306/bobbies"
+  provider = "postgresql"
+  url      = "postgresql://neondb_owner:npg_hFQtTAbd7y2S@ep-old-cake-a232zb5p-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 }
 
 model categories {
@@ -21,8 +20,8 @@ model commentlike {
   ip        String
   createdAt DateTime @default(now())
   comments  comments @relation(fields: [commentId], references: [id], map: "CommentLike_commentId_fkey")
-   @@unique([commentId, ip])
-  @@index([commentId], map: "CommentLike_commentId_fkey")
+  @@unique([commentId, ip])
+  // Removed: @@index([commentId], map: "CommentLike_commentId_fkey")
 }
 
 model comments {
@@ -35,8 +34,7 @@ model comments {
   commentlike commentlike[]
   movies      movies        @relation(fields: [movieId], references: [id], map: "Comments_movieId_fkey")
   replies     replies[]
-
-  @@index([movieId], map: "Comments_movieId_fkey")
+  // Removed: @@index([movieId], map: "Comments_movieId_fkey")
 }
 
 model contacts {
@@ -67,13 +65,24 @@ model movies {
   rating      Float
   description String
   poster      String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime       @default(now())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @default(now())
   comments    comments[]
-  category  categories @relation(fields: [categoryId], references: [id], map: "Movies_categoryId_fkey")
+  category    categories @relation(fields: [categoryId], references: [id], map: "Movies_categoryId_fkey")
   sources     sources[]
+  // Removed: @@index([categoryId], map: "Movies_categoryId_fkey")
+}
 
-  @@index([categoryId], map: "Movies_categoryId_fkey")
+model replies {
+  id         Int          @id @default(autoincrement())
+  commentId  Int
+  userName   String
+  content    String
+  replyLike  Int          @default(0)
+  createdAt  DateTime     @default(now())
+  comments   comments     @relation(fields: [commentId], references: [id], map: "Replies_commentId_fkey")
+  replylikes replylikes[]
+  // Removed: @@index([commentId], map: "Replies_commentId_fkey")
 }
 
 model notification {
@@ -87,26 +96,12 @@ model notification {
   usernotifications usernotifications[]
 }
 
-model replies {
-  id         Int          @id @default(autoincrement())
-  commentId  Int
-  userName   String
-  content    String
-  replyLike  Int          @default(0)
-  createdAt  DateTime     @default(now())
-  comments   comments     @relation(fields: [commentId], references: [id], map: "Replies_commentId_fkey")
-  replylikes replylikes[]
-
-  @@index([commentId], map: "Replies_commentId_fkey")
-}
-
 model replylikes {
   id      Int     @id @default(autoincrement())
   replyId Int
   ip      String
   replies replies @relation(fields: [replyId], references: [id], map: "ReplyLikes_replyId_fkey")
-
-  @@index([replyId], map: "ReplyLikes_replyId_fkey")
+  // Removed: @@index([replyId], map: "ReplyLikes_replyId_fkey")
 }
 
 model sources {
@@ -118,8 +113,7 @@ model sources {
   part    Int
   baseUrl String
   movies  movies @relation(fields: [movieId], references: [id], map: "Sources_movieId_fkey")
-
-  @@index([movieId], map: "Sources_movieId_fkey")
+  // Removed: @@index([movieId], map: "Sources_movieId_fkey")
 }
 
 model subscription {
@@ -144,9 +138,9 @@ model usernotifications {
   updated_at     DateTime     @default(now())
   notification   notification @relation(fields: [notificationId], references: [id], map: "UserNotifications_notificationId_fkey")
   subscription   subscription @relation(fields: [subscriptionId], references: [id], map: "UserNotifications_subscriptionId_fkey")
-
-  @@index([notificationId], map: "UserNotifications_notificationId_fkey")
-  @@index([subscriptionId], map: "UserNotifications_subscriptionId_fkey")
+  // Removed both index declarations below
+  // @@index([notificationId], map: "UserNotifications_notificationId_fkey")
+  // @@index([subscriptionId], map: "UserNotifications_subscriptionId_fkey")
 }
 
 model users {
