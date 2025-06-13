@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 const INTERFACE_URL = process.env.NEXT_FRONTEND_BASE;
-import redis from '@/lib/redis';
+// import redis from '@/lib/redis';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
    // --- CORS for http://localhost:3001 ---
   res.setHeader('Access-Control-Allow-Origin', INTERFACE_URL || 'https://npfrontend-opp7.vercel.app');
@@ -18,10 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (req.method) {
       case 'GET': {
         // get comments from redis
-        const cachedComments = await redis.get('comments','all');
-        if (typeof cachedComments === 'string') {
-          return res.status(200).json(JSON.parse(cachedComments));
-        }
+        // const cachedComments = await redis.get('comments','all');
+        // if (typeof cachedComments === 'string') {
+        //   return res.status(200).json(JSON.parse(cachedComments));
+        // }
         // Get all comments with replies
         const comments = await prisma.comments.findMany({
           orderBy: { createdAt: 'desc' },
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         });
         // set comments to redis
-        await redis.save('comments','all',JSON.stringify(comments));
+        // await redis.save('comments','all',JSON.stringify(comments));
         return res.status(200).json(comments);
       }     
 

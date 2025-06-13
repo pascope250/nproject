@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis'
+// import redis from '@/lib/redis'
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,7 +12,7 @@ export default async function handler(
     switch (req.method) {
       case 'DELETE':
         await handleDelete(Number(commentId), res);
-        await redis.delete(`comments`,'all');
+        // await redis.delete(`comments`,'all');
         res.status(200).json({ message: 'Comment deleted successfully' });
         break;
       default:

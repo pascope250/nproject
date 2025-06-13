@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
-import redis from '@/lib/redis';
+// import redis from '@/lib/redis';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -90,7 +90,7 @@ export default async function handler(
             category: true // Include related category data
           }
         });
-        await redis.delete('movies','all');
+        // await redis.delete('movies','all');
         return res.status(201).json({ 
           message: 'Movie created successfully',
         });
@@ -156,7 +156,7 @@ export default async function handler(
             category: true
           }
         });
-        await redis.delete('movies','all');
+        // await redis.delete('movies','all');
 
         return res.status(200).json(updatedMovie);
       }
@@ -197,7 +197,7 @@ export default async function handler(
           where: { id: Number(id) },
         });
 
-        await redis.delete('movies','all');
+        // await redis.delete('movies','all');
 
         return res.status(204).end();
       }

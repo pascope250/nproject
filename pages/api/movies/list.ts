@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import radis from '@/lib/redis';
+// import radis from '@/lib/redis';
 
 const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
@@ -34,11 +34,11 @@ export default async function handler(
       case 'GET': {
         // get all from radis caches
 
-        const cachedMovies = await radis.get('movies','all');
+        // const cachedMovies = await radis.get('movies','all');
 
-        if (typeof cachedMovies === 'string') {
-          return res.status(200).json(JSON.parse(cachedMovies));
-        }
+        // if (typeof cachedMovies === 'string') {
+        //   return res.status(200).json(JSON.parse(cachedMovies));
+        // }
         // Get all movies with their categories
         const movies = await prisma.movies.findMany({
           orderBy: { createdAt: 'desc' },
@@ -78,7 +78,7 @@ export default async function handler(
         });
 
         // save to radis cache
-        await radis.save('movies','all',JSON.stringify(newMovies));
+        // await radis.save('movies','all',JSON.stringify(newMovies));
         return res.status(200).json(newMovies);
       }
 

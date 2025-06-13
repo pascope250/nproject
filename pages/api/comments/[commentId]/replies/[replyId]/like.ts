@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+// import redis from '@/lib/redis';
 const INTERFACE_URL = process.env.NEXT_FRONTEND_BASE;
 export default async function handler(
   req: NextApiRequest,
@@ -77,7 +77,7 @@ export default async function handler(
         data: { replyLike: { increment: 1 } },
       }),
     ]);
-    await redis.delete('comments','all');
+    // await redis.delete('comments','all');
     return res.status(200).json({ 
       success: true,
       likes: updatedReply.replyLike,
