@@ -69,7 +69,7 @@ export function SourceProvider({ children }: { children: ReactNode }) {
       const res = await fetch('/api/sources', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, EditmovieId: updateData.movieId, Editname: updateData.name, Editdomain: updateData.domain, Edittype: updateData.type, Editpart: updateData.part, EditbaseUrl: updateData.baseUrl }),
+        body: JSON.stringify({ id, EditmovieId: updateData.movieId, Editname: updateData.name, Editdomain: updateData.domain, Edittype: updateData.type, Editpart: updateData.part, EditbaseUrl: updateData.baseUrl, EditdownloadLink: updateData.downloadLink, EditisIframe: updateData.isIframe }),
       });
       if (!res.ok) throw new Error('Failed to update source');
       await fetchSources();

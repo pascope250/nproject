@@ -4,7 +4,7 @@ const INTERFACE_URL = process.env.NEXT_FRONTEND_BASE;
 import redis from '@/lib/redis';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
    // --- CORS for http://localhost:3001 ---
-  res.setHeader('Access-Control-Allow-Origin', INTERFACE_URL || 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', INTERFACE_URL || 'https://npfrontend-opp7.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');

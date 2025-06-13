@@ -6,4 +6,6 @@ export interface Source{
     type: 'END' | 'SEASON';
     part: number;
     baseUrl: string;
+    downloadLink: string;
+    isIframe: boolean;
 }

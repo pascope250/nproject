@@ -6,8 +6,8 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 // Configure where to store uploaded images
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'movies');
-const PUBLIC_URL_BASE = '/uploads/movies';
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'posters');
+const PUBLIC_URL_BASE = '/posters';
 
 // Ensure upload directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -63,7 +63,7 @@ export default async function handler(
               const filePath = path.join(UPLOAD_DIR, fileName);
               
               await fs.promises.writeFile(filePath, buffer);
-              posterUrl = `${PUBLIC_URL_BASE}/${fileName}`;
+              posterUrl = `${fileName}`;
             } else if (poster.startsWith('http')) {
               // If it's already a URL (from CDN), use as-is
               posterUrl = poster;
@@ -75,9 +75,8 @@ export default async function handler(
             });
           }
         }
-
         // Create new movie
-        const newMovie = await prisma.movies.create({
+         await prisma.movies.create({
           data: { 
             title, 
             categoryId: Number(categoryId),
@@ -92,7 +91,9 @@ export default async function handler(
           }
         });
         await redis.delete('movies','all');
-        return res.status(201).json(newMovie);
+        return res.status(201).json({ 
+          message: 'Movie created successfully',
+        });
       }
 
       case 'GET': {
@@ -107,7 +108,8 @@ export default async function handler(
 
         movies.forEach((movie: any) => {
           if (movie.poster) {
-            movie.poster = `${process.env.NEXT_PUBLIC_BASE_URL}${movie.poster}`;
+            movie.poster = `${PUBLIC_URL_BASE}/${movie.poster}`;
+            movie.createdAt = movie.createdAt.toISOString();
           }
         });
         
@@ -141,7 +143,7 @@ export default async function handler(
             const filePath = path.join(UPLOAD_DIR, fileName);
             
             await fs.promises.writeFile(filePath, buffer);
-            updateData.poster = `${PUBLIC_URL_BASE}/${fileName}`;
+            updateData.poster = `${fileName}`;
           } else if (poster.startsWith('http')) {
             updateData.poster = poster;
           }

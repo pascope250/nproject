@@ -22,6 +22,8 @@ export default function Movies() {
     }
   });
 
+  console.log(movies);
+  
   const newmovies = movies.map((movie) => {
     return{
       id: Number(movie.id),
@@ -32,7 +34,7 @@ export default function Movies() {
       description: movie.description,
       year: Number(movie.year),
       rating: Number(movie.rating),
-      createdAt: movie.created_at,
+      createdAt: movie.createdAt,
     } as Movie;
   });
 

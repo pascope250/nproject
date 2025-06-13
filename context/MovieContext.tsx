@@ -11,7 +11,7 @@ interface Movie {
   rating: number;
   description?: string | null;
   poster?: string;
-  created_at?: string;
+  createdAt?: string;
   category?: { id: number; name: string };
 }
 

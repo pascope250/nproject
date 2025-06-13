@@ -9,7 +9,7 @@ export default async function handler(
     switch (req.method) {
       case 'POST':
         // Validate request body
-        const { movieId, name, domain, type, part, baseUrl } = req.body;
+        const { movieId, name, domain, type, part, baseUrl, downloadLink,isIframe } = req.body;
         
         if (!name || !domain || !type || !part || !baseUrl) {
           return res.status(400).json({ 
@@ -26,7 +26,10 @@ export default async function handler(
             domain,
             type,
             part,
-            baseUrl}
+            baseUrl,
+          downloadLink,
+          isIframe,
+        }
         });
         
         return res.status(201).json(newSource);
@@ -38,7 +41,7 @@ export default async function handler(
 
       case 'PUT':
         // Update category
-        const {id, EditmovieId, Editname, Editdomain, Edittype, Editpart, EditbaseUrl } = req.body;
+        const {id, EditmovieId, Editname, Editdomain, Edittype, Editpart, EditbaseUrl, EditdownloadLink, EditisIframe } = req.body;
 
         if (!id || !Editname || !Editdomain || !Edittype || !Editpart || !EditbaseUrl) {
           return res.status(400).json({ 
@@ -55,6 +58,8 @@ export default async function handler(
             type: Edittype,
             part: Editpart,
             baseUrl: EditbaseUrl,
+            downloadLink: EditdownloadLink,
+            isIframe: EditisIframe,
            },
         });
 

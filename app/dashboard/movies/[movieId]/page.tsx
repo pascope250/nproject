@@ -34,6 +34,7 @@ export default function MovieSourcesPage() {
     { accessor: 'type', header: 'Type' },
     { accessor: 'part', header: 'Part' },
     { accessor: 'baseUrl', header: 'Base URL' },
+    { accessor: 'downloadLink', header: 'DownloadLink' },
   ];
 
   const handleAdd = () => {
@@ -93,7 +94,7 @@ export default function MovieSourcesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={currentSource ? 'Edit Source' : 'Add Source'}
-        size="lg"
+        size="xl"
         footer={
           <>
             <button

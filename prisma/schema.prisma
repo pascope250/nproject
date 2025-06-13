@@ -105,15 +105,16 @@ model replylikes {
 }
 
 model sources {
-  id      Int    @id @default(autoincrement())
-  movieId Int
-  name    String
-  domain  String
-  type    String
-  part    Int
-  baseUrl String
-  movies  movies @relation(fields: [movieId], references: [id], map: "Sources_movieId_fkey")
-  // Removed: @@index([movieId], map: "Sources_movieId_fkey")
+  id           Int     @id @default(autoincrement())
+  movieId      Int
+  name         String
+  domain       String
+  type         String
+  part         Int
+  baseUrl      String
+  downloadLink String? @default(dbgenerated("NULL")) // Optional, defaults to NULL
+  isIframe      Boolean @default(false)
+  movies       movies  @relation(fields: [movieId], references: [id], map: "Sources_movieId_fkey")
 }
 
 model subscription {

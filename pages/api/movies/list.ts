@@ -1,18 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-import fs from 'fs';
-import path from 'path';
 import radis from '@/lib/redis';
 
-
-// Configure where to store uploaded images
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'movies');
-const PUBLIC_URL_BASE = '/uploads/posters';
-
-// Ensure upload directory exists
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
 export const config = {
   api: {
@@ -29,7 +19,7 @@ export default async function handler(
 ) {
 
    // --- CORS for http://localhost:3001 ---
-  res.setHeader('Access-Control-Allow-Origin', BACKEND_URL || 'http://localhost:3001');
+  res.setHeader('Access-Control-Allow-Origin', BACKEND_URL || 'https://npfrontend-opp7.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -74,7 +64,7 @@ export default async function handler(
       year: movie.year,
       rating: movie.rating,
       description: movie.description,
-      poster: PUBLIC_URL_BASE+'/'+movie.poster,
+      poster: IMAGE_BASE_URL+'/'+movie.poster,
       createdAt: movie.createdAt,
       source: movie.sources.map((source: any) => {
         return {

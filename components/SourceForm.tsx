@@ -31,6 +31,8 @@ export function SourceForm({ source, movieOptions, onSubmit }: SourceFormProps) 
       type: source?.type || 'END',
       part: source?.part || 1,
       baseUrl: source?.baseUrl || '',
+      downloadLink: source?.downloadLink || '',
+      isIframe: source?.isIframe || false,
     },
     validationSchema,
     enableReinitialize: true,
@@ -43,30 +45,7 @@ export function SourceForm({ source, movieOptions, onSubmit }: SourceFormProps) 
 
   return (
     <form id="source-form" onSubmit={formik.handleSubmit} className="space-y-4" autoComplete="on">
-      {/* Movie select */}
-      {/* <div>
-        <label htmlFor="movieId" className="block text-sm font-medium text-gray-700">
-          Movie *
-        </label>
-        <select
-          id="movieId"
-          name="movieId"
-          value={formik.values.movieId}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">Select movie</option>
-          {movieOptions.map((movie) => (
-            <option key={movie.id} value={movie.id}>
-              {movie.title}
-            </option>
-          ))}
-        </select>
-        {formik.touched.movieId && formik.errors.movieId && (
-          <p className="mt-1 text-sm text-red-600">{formik.errors.movieId}</p>
-        )}
-      </div> */}
+      <div className='grid grid-cols-2 gap-4'>
 
       {/* Name input */}
       <div>
@@ -103,6 +82,25 @@ export function SourceForm({ source, movieOptions, onSubmit }: SourceFormProps) 
         />
         {formik.touched.domain && formik.errors.domain && (
           <p className="mt-1 text-sm text-red-600">{formik.errors.domain}</p>
+        )}
+      </div>
+
+      {/* Base URL input */}
+      <div>
+        <label htmlFor="baseUrl" className="block text-sm font-medium text-gray-700">
+          Base URL *
+        </label>
+        <input
+          id="baseUrl"
+          name="baseUrl"
+          type="text"
+          value={formik.values.baseUrl}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        />
+        {formik.touched.baseUrl && formik.errors.baseUrl && (
+          <p className="mt-1 text-sm text-red-600">{formik.errors.baseUrl}</p>
         )}
       </div>
 
@@ -147,23 +145,43 @@ export function SourceForm({ source, movieOptions, onSubmit }: SourceFormProps) 
         )}
       </div>
 
-      {/* Base URL input */}
+      
+
       <div>
-        <label htmlFor="baseUrl" className="block text-sm font-medium text-gray-700">
-          Base URL *
+        <label htmlFor="quality" className="block text-sm font-medium text-gray-700">
+          DownloadLink
         </label>
         <input
-          id="baseUrl"
-          name="baseUrl"
+          id='downloadLink'
+          name="downloadLink"
           type="text"
-          value={formik.values.baseUrl}
+          value={formik.values.downloadLink}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
-        {formik.touched.baseUrl && formik.errors.baseUrl && (
-          <p className="mt-1 text-sm text-red-600">{formik.errors.baseUrl}</p>
+        {formik.touched.downloadLink && formik.errors.downloadLink && (
+          <p className="mt-1 text-sm text-red-600">{formik.errors.downloadLink}</p>
         )}
+      </div>
+
+      <div>
+        <label htmlFor="isIframe" className="block text-sm font-medium text-gray-700">
+          IsIframe
+        </label>
+        {/* we will use checkbox */}
+        <input
+          id="isIframe"
+          name="isIframe"
+          type="checkbox"
+          checked={formik.values.isIframe}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+        />
+      </div>
+      </div>
+
+      <div>
       </div>
     </form>
   );
