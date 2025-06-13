@@ -4,6 +4,7 @@ const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
   'https://hobbyvb.com',
+  'www.hobbyvb.com',
   'http://localhost:3001', // Add more domains as needed
 ].filter(Boolean); // Remove undefined values
 
