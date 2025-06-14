@@ -79,6 +79,7 @@ export default async function handler(
           part: source.part,
           domain: source.domain,
           baseUrl: source.baseUrl,
+          downloadLink: source.downloadLink,
         }
       })
     }
