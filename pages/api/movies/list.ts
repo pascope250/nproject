@@ -80,6 +80,7 @@ export default async function handler(
           domain: source.domain,
           baseUrl: source.baseUrl,
           downloadLink: source.downloadLink,
+          isIframe: source.isIframe,
         }
       })
     }
