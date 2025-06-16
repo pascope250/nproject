@@ -54,7 +54,7 @@ app.prepare().then(() => {
   // Initialize Socket.io
   const io = new SocketServer(server, {
     cors: {
-      origin: dev ? 'http://localhost:3000' : 'https://your-production-domain.com',
+      origin: dev ? 'http://localhost:3000' : ['https://hobbyvb.com','https://npfrontend-opp7.vercel.app'],
       methods: ['GET', 'POST']
     },
     path: '/api/socketio',
