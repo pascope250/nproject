@@ -1,14 +1,26 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-const BACKEND_URL = process.env.NEXT_FRONTEND_BASE;
-import redis from '@/lib/redis';
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-   // --- CORS for http://localhost:3001 ---
-  res.setHeader('Access-Control-Allow-Origin', BACKEND_URL || 'http://localhost:3001');
+// import redis from '@/lib/redis';
+const ALLOWED_ORIGINS = [
+  process.env.NEXT_FRONTEND_BASE,
+  'https://npfrontend-opp7.vercel.app',
+  'https://hobbyvb.com',
+  'http://localhost:3001', // Add more domains as needed
+].filter(Boolean); // Remove undefined values
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+ // --- Dynamic CORS Handling ---
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-
+  
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -37,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           where: { id: commentId }
         });
 
-        await redis.delete('comments','all');
+        // await redis.delete('comments','all');
         return res.status(200).json(deletedComment);
       }
 
@@ -55,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             commentLike: 0
           }
         });
-        await redis.delete('comments','all');
+        // await redis.delete('comments','all');
         return res.status(201).json(newComment);
       }
       default:

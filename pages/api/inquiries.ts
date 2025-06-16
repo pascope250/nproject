@@ -1,12 +1,26 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
+const ALLOWED_ORIGINS = [
+  process.env.NEXT_FRONTEND_BASE,
+  'https://npfrontend-opp7.vercel.app',
+  'https://hobbyvb.com',
+  'http://localhost:3001', // Add more domains as needed
+].filter(Boolean); // Remove undefined values
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // CORS for local dev
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+ // --- Dynamic CORS Handling ---
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
