@@ -170,7 +170,7 @@ export default function CategoriesPage() {
                 <li key={comment.id} className="mb-4 border-b pb-2">
                   <div className="flex items-center mb-1">
                     <span className="font-semibold text-gray-800">
-                      {comment.userName}
+                      {comment.userName+ `(${comment.movieId})`}
                     </span>
                     <span className="ml-2 text-xs text-gray-500">
                       {format(
