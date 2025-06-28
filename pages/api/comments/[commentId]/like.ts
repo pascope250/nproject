@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-// import redis from '@/lib/redis';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
@@ -70,8 +71,7 @@ export default async function handler(
       }),
     ]);
 
-    // await redis.delete('comments','all');
-
+    await cache.delete(cacheNameSpace.comment, cacheKeys.comment);
     return res.status(200).json({ 
       success: true,
       likes: updatedComment.commentLike,

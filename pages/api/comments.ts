@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-// import redis from '@/lib/redis';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
@@ -29,6 +30,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
+        // get all data from caches
+        const getDataCommentCache = await cache.get(cacheNameSpace.comment, cacheKeys.comment);
+        if(getDataCommentCache){
+          return res.status(200).json(getDataCommentCache);
+        }
         // Get all comments with replies
         const comments = await prisma.comments.findMany({
           orderBy: { createdAt: 'desc' },
@@ -38,6 +44,8 @@ export default async function handler(
             }
           }
         });
+        // save in caches
+        await cache.save(cacheNameSpace.comment, cacheKeys.comment, comments, {ttl: 259200});
         return res.status(200).json(comments);
       }
       case 'DELETE': {
@@ -48,8 +56,7 @@ export default async function handler(
         const deletedComment = await prisma.comments.delete({
           where: { id: commentId }
         });
-
-        // await redis.delete('comments','all');
+        await cache.delete(cacheNameSpace.comment, cacheKeys.comment);
         return res.status(200).json(deletedComment);
       }
 
@@ -67,7 +74,7 @@ export default async function handler(
             commentLike: 0
           }
         });
-        // await redis.delete('comments','all');
+        await cache.delete(cacheNameSpace.comment, cacheKeys.comment);
         return res.status(201).json(newComment);
       }
       default:

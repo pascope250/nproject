@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-// import radis from '@/lib/redis';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 
 const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
@@ -39,15 +40,12 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        // get all from radis caches
+        // get single from  caches
+        const getSingleCacheMovie = await cache.get(cacheNameSpace.singleMovie, cacheKeys.singleMovie);
+        if (getSingleCacheMovie) {
+          return res.status(200).json(getSingleCacheMovie);
+        }
 
-        // const cachedMovies = await radis.get('movies','all');
-
-        // if (typeof cachedMovies === 'string') {
-        //   return res.status(200).json(JSON.parse(cachedMovies));
-        // }
-        // Get single movie by id
-        // param id
         const movie = await prisma.movies.findFirst({
           where: {
             id: req.query.id ? Number(req.query.id) : undefined,
@@ -85,11 +83,10 @@ export default async function handler(
       })
     };
 
-        // save to radis cache
-        // await radis.save('movies','all',JSON.stringify(newMovies));
+        // save cache
+        await cache.save(cacheNameSpace.singleMovie, cacheKeys.singleMovie, newMovies, {ttl: 259200});
         return res.status(200).json(newMovies);
       }
-
       default:
         res.setHeader('Allow', ['GET']);
         return res.status(405).json({

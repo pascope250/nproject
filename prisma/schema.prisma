@@ -112,6 +112,7 @@ model sources {
   type         String
   part         Int
   baseUrl      String
+  createdAt    DateTime @default(now())
   downloadLink String? @default(dbgenerated("NULL")) // Optional, defaults to NULL
   isIframe      Boolean @default(false)
   movies       movies  @relation(fields: [movieId], references: [id], map: "Sources_movieId_fkey")

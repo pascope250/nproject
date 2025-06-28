@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
-
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -22,14 +23,21 @@ export default async function handler(
         const newCategory = await prisma.categories.create({
           data: { name }
         });
+        await cache.delete(cacheNameSpace.category, cacheKeys.category);
         
         return res.status(201).json(newCategory);
 
       case 'GET':
+        // get data from caches
+        const getDataFromCache = await cache.get(cacheNameSpace.category, cacheKeys.category);
+        if (getDataFromCache) {
+          return res.status(200).json(getDataFromCache);
+        }
         // Get all categories
         const categories = await prisma.categories.findMany({
           orderBy: { createdAt: 'desc' }
         });
+        await cache.save(cacheNameSpace.category, cacheKeys.category, categories, {ttl: 259200});
         return res.status(200).json(categories);
 
       case 'PUT':
@@ -48,6 +56,8 @@ export default async function handler(
           data: { name: newName },
         });
 
+        await cache.delete(cacheNameSpace.category, cacheKeys.category);
+
         return res.status(200).json(updatedCategory);
 
       case 'DELETE':
@@ -63,6 +73,8 @@ export default async function handler(
         await prisma.categories.delete({
           where: { id: Number(categoryId) },
         });
+
+        await cache.delete(cacheNameSpace.category, cacheKeys.category);
 
         return res.status(204).end(); // 204 No Content is standard for DELETE
 

@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
-
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
@@ -49,6 +50,8 @@ export default async function handler(
             part,
             baseUrl}
         });
+
+        await cache.delete(cacheNameSpace.comment, cacheKeys.comment)
         
         return res.status(201).json(newSource);
 
@@ -79,6 +82,7 @@ export default async function handler(
            },
         });
 
+        await cache.delete(cacheNameSpace.comment, cacheKeys.comment)
         return res.status(200).json(updatedSource);
 
       case 'DELETE':
@@ -94,7 +98,7 @@ export default async function handler(
         await prisma.sources.delete({
           where: { id: Number(SourceId) },
         });
-
+        await cache.delete(cacheNameSpace.comment, cacheKeys.comment);
         return res.status(204).end(); // 204 No Content is standard for DELETE
 
       default:

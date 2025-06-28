@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-// import redis from '@/lib/redis';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 interface ReplyRequest {
   userName: string;
   content: string;
@@ -53,7 +54,7 @@ export default async function handler(
         content,
       },
     });
-    // await redis.delete('comments','all');
+    await cache.delete(cacheNameSpace.comment, cacheKeys.comment);
     return res.status(201).json(reply);
   } catch (error) {
     console.error('Reply API error:', error);

@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
-// import redis from '@/lib/redis';
+import cache from '@/lib/redisCache';
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 
 // Configure where to store uploaded images
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'posters');
@@ -97,7 +98,7 @@ export default async function handler(
             category: true // Include related category data
           }
         });
-        // await redis.delete('movies','all');
+         await cache.delete(cacheNameSpace.movie, cacheKeys.movie); 
         return res.status(201).json({ 
           message: 'Movie created successfully',
         });
@@ -119,7 +120,8 @@ export default async function handler(
             movie.createdAt = movie.createdAt.toISOString();
           }
         });
-        
+
+        // save caches
         return res.status(200).json(movies);
       }
       case 'PUT': {
@@ -131,7 +133,6 @@ export default async function handler(
             message: 'All fields are required',
           });
         }
-
         // Handle poster update if provided
         let updateData: any = {
           title,
@@ -163,8 +164,9 @@ export default async function handler(
             category: true
           }
         });
-        // await redis.delete('movies','all');
-
+      
+        // delete caches
+        await cache.delete(cacheNameSpace.movie, cacheKeys.movie);
         return res.status(200).json(updatedMovie);
       }
 
@@ -204,8 +206,7 @@ export default async function handler(
           where: { id: Number(id) },
         });
 
-        // await redis.delete('movies','all');
-
+        await cache.delete(cacheNameSpace.movie, cacheKeys.movie);
         return res.status(204).end();
       }
 

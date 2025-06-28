@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
-// import radis from '@/lib/redis';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 
 const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
@@ -39,31 +40,32 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        // get all from radis caches
+  // get all from caches
+  const cachedMovies = await cache.get(cacheNameSpace.movie, cacheKeys.movie);
+  if (cachedMovies) {
+    return res.status(200).json(cachedMovies);
+  }
 
-        // const cachedMovies = await radis.get('movies','all');
+  // Get all movies with their categories and sources
+  const movies = await prisma.movies.findMany({
+    include: {
+      category: true,
+      sources: {
+        orderBy: {
+          createdAt: 'desc' // Properly typed orderBy
+        }
+      }
+    }
+  });
 
-        // if (typeof cachedMovies === 'string') {
-        //   return res.status(200).json(JSON.parse(cachedMovies));
-        // }
-        // Get all movies with their categories
-        const movies = await prisma.movies.findMany({
-          orderBy: { createdAt: 'desc' },
-          include: {
-            category: true,
-            sources:true
-          }
-        });
-        // add url on poster from local env
-
-        // movies.forEach((movie: any) => {
-        //   if (movie.poster) {
-        //     movie.poster = `${process.env.NEXT_PUBLIC_BASE_URL}${movie.poster}`;
-        //   }
-        // });
-
-        const newMovies = movies.map((movie: any) => {
-            return {
+  // Transform the data and add latest source date to each movie
+  const moviesWithLatestSource = movies.map((movie: any) => {
+    // Fix: Changed movie[0] to movie.sources[0]
+    const latestSourceDate = movie.sources.length > 0 
+      ? new Date(movie.sources[0].createdAt).getTime() 
+      : new Date(movie.createdAt).getTime();
+    
+    return {
       id: movie.id,
       categoryId: movie.categoryId,
       categoryName: movie.category.name,
@@ -71,25 +73,30 @@ export default async function handler(
       year: movie.year,
       rating: movie.rating,
       description: movie.description,
-      poster: IMAGE_BASE_URL+'/'+movie.poster,
+      poster: `${IMAGE_BASE_URL}/${movie.poster}`,
       createdAt: movie.createdAt,
-      source: movie.sources.map((source: any) => {
-        return {
-          type: source.type,
-          part: source.part,
-          domain: source.domain,
-          baseUrl: source.baseUrl,
-          downloadLink: source.downloadLink,
-          isIframe: source.isIframe,
-        }
-      })
-    }
-        });
+      latestSourceDate, // Add this field for sorting
+      sources: movie.sources.map((source: any) => ({
+        type: source.type,
+        part: source.part,
+        domain: source.domain,
+        baseUrl: source.baseUrl,
+        downloadLink: source.downloadLink,
+        isIframe: source.isIframe,
+        createdAt: source.createdAt,
+      }))
+    };
+  });
 
-        // save to radis cache
-        // await radis.save('movies','all',JSON.stringify(newMovies));
-        return res.status(200).json(newMovies);
-      }
+  // Sort movies by latest source date (newest first)
+  const sortedMovies = moviesWithLatestSource.sort((a, b) => {
+    return b.latestSourceDate - a.latestSourceDate;
+  });
+
+  // save to cache
+  await cache.save(cacheNameSpace.movie, cacheKeys.movie, sortedMovies, { ttl: 259200 });
+  return res.status(200).json(sortedMovies);
+}
 
       default:
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
@@ -108,7 +115,6 @@ export default async function handler(
         return res.status(409).json({ message: 'Movie with this title already exists' });
       }
     }
-
     return res.status(500).json({ 
       message: 'Internal server error',
       error: process.env.NODE_ENV === 'development' && err instanceof Error ? err.message : undefined

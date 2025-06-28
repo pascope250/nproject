@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
-
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -32,6 +33,7 @@ export default async function handler(
         }
         });
         
+        await cache.delete(cacheNameSpace.movie, cacheKeys.movie)
         return res.status(201).json(newSource);
 
       case 'GET':
@@ -62,6 +64,7 @@ export default async function handler(
             isIframe: EditisIframe,
            },
         });
+        await cache.delete(cacheNameSpace.movie, cacheKeys.movie)
 
         return res.status(200).json(updatedSource);
 
@@ -78,9 +81,9 @@ export default async function handler(
         await prisma.sources.delete({
           where: { id: Number(SourceId) },
         });
-
+        await cache.delete(cacheNameSpace.movie, cacheKeys.movie)
         return res.status(204).end(); // 204 No Content is standard for DELETE
-
+        
       default:
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
         return res.status(405).json({

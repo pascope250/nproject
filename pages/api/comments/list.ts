@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
+import cache from '@/lib/redisCache';
+import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
 const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
@@ -28,12 +30,11 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'GET': {
-        // get comments from redis
-        // const cachedComments = await redis.get('comments','all');
-        // if (typeof cachedComments === 'string') {
-        //   return res.status(200).json(JSON.parse(cachedComments));
-        // }
-        // Get all comments with replies
+      // if comments exist in caches, return them
+      const cachedComment = await cache.get(cacheNameSpace.comment, cacheKeys.comment);
+      if(cachedComment){
+        return res.status(200).json(cachedComment);
+      }
         const comments = await prisma.comments.findMany({
           orderBy: { createdAt: 'desc' },
           include: {
@@ -42,8 +43,7 @@ export default async function handler(
             }
           }
         });
-        // set comments to redis
-        // await redis.save('comments','all',JSON.stringify(comments));
+       await cache.save(cacheNameSpace.comment, cacheKeys.comment, comments, {ttl: 259200});
         return res.status(200).json(comments);
       }     
 
