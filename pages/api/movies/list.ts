@@ -41,7 +41,7 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
   // get all from caches
-  await cache.flush();
+  // await cache.flush();
         // get all from caches
         const cachedMovies = await cache.get(cacheNameSpace.movie, cacheKeys.movie);
         if (cachedMovies) {
