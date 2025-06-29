@@ -8,5 +8,5 @@ export interface Source{
     baseUrl: string;
     downloadLink: string;
     isIframe: boolean;
-    createdAt: string;
+    createdAt?: string;
 }

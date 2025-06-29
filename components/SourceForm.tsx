@@ -24,7 +24,7 @@ const validationSchema = Yup.object().shape({
 });
 
 export function SourceForm({ source, movieOptions, onSubmit }: SourceFormProps) {
-  const formik = useFormik<Omit<Source, 'id' | 'movieId'>>({
+  const formik = useFormik<Omit<Source, 'id' | 'movieId' | 'createdAt'>>({
     initialValues: {
       name: source?.name || '',
       domain: source?.domain || '',
