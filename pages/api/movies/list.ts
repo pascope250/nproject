@@ -41,62 +41,49 @@ export default async function handler(
     switch (req.method) {
       case 'GET': {
   // get all from caches
-  const cachedMovies = await cache.get(cacheNameSpace.movie, cacheKeys.movie);
-  if (cachedMovies) {
-    return res.status(200).json(cachedMovies);
-  }
+  await cache.flush();
+        // get all from caches
+        const cachedMovies = await cache.get(cacheNameSpace.movie, cacheKeys.movie);
+        if (cachedMovies) {
+          return res.status(200).json(cachedMovies);
+        }
+        // Get all movies with their categories
+        const movies = await prisma.movies.findMany({
+          orderBy: { createdAt: 'desc' },
+          include: {
+            category: true,
+            sources:true
+          }
+        });
+        const newMovies = movies.map((movie: any) => {
+            return {
+      id: movie.id,
+      categoryId: movie.categoryId,
+      categoryName: movie.category.name,
+      title: movie.title,
+      year: movie.year,
+      rating: movie.rating,
+      description: movie.description,
+      poster: IMAGE_BASE_URL+'/'+movie.poster,
+      createdAt: movie.createdAt,
+      source: movie.sources.map((source: any) => {
+        return {
+          type: source.type,
+          part: source.part,
+          domain: source.domain,
+          baseUrl: source.baseUrl,
+          downloadLink: source.downloadLink,
+          isIframe: source.isIframe,
+          createdAt: source.createdAt,
+        }
+      })
+    }
+        });
 
-  // Get all movies with their categories and sources
-  // const movies = await prisma.movies.findMany({
-  //   include: {
-  //     category: true,
-  //     sources: {
-  //       orderBy: {
-  //         createdAt: 'desc' // Properly typed orderBy
-  //       }
-  //     }
-  //   }
-  // });
-
-  // // Transform the data and add latest source date to each movie
-  // const moviesWithLatestSource = movies.map((movie: any) => {
-  //   // Fix: Changed movie[0] to movie.sources[0]
-  //   const latestSourceDate = movie.sources.length > 0 
-  //     ? new Date(movie.sources[0].createdAt).getTime() 
-  //     : new Date(movie.createdAt).getTime();
-    
-  //   return {
-  //     id: movie.id,
-  //     categoryId: movie.categoryId,
-  //     categoryName: movie.category.name,
-  //     title: movie.title,
-  //     year: movie.year,
-  //     rating: movie.rating,
-  //     description: movie.description,
-  //     poster: `${IMAGE_BASE_URL}/${movie.poster}`,
-  //     createdAt: movie.createdAt,
-  //     latestSourceDate, // Add this field for sorting
-  //     sources: movie.sources.map((source: any) => ({
-  //       type: source.type,
-  //       part: source.part,
-  //       domain: source.domain,
-  //       baseUrl: source.baseUrl,
-  //       downloadLink: source.downloadLink,
-  //       isIframe: source.isIframe,
-  //       createdAt: source.createdAt,
-  //     }))
-  //   };
-  // });
-
-  // // Sort movies by latest source date (newest first)
-  // const sortedMovies = moviesWithLatestSource.sort((a, b) => {
-  //   return b.latestSourceDate - a.latestSourceDate;
-  // });
-
-  // // save to cache
-  // await cache.save(cacheNameSpace.movie, cacheKeys.movie, sortedMovies, { ttl: 259200 });
-  // return res.status(200).json(sortedMovies);
-}
+        // save to cache
+        await cache.save(cacheNameSpace.movie, cacheKeys.movie, newMovies, {ttl: 259200});
+        return res.status(200).json(newMovies);
+      }
 
       default:
         res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);

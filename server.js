@@ -35,14 +35,14 @@
 
 const { createServer } = require('http');
 const next = require('next');
-const { Server: SocketServer } = require('socket.io');
+// const { Server: SocketServer } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
 // Global variable to store io instance
-global.io = null;
+// global.io = null;
 
 app.prepare().then(() => {
   const server = createServer((req, res) => {
@@ -52,35 +52,35 @@ app.prepare().then(() => {
   });
 
   // Initialize Socket.io
-  const io = new SocketServer(server, {
-    cors: {
-      origin: dev ? 'http://localhost:3000' : ['https://hobbyvb.com','https://npfrontend-opp7.vercel.app'],
-      methods: ['GET', 'POST']
-    },
-    path: '/api/socketio',
-    serveClient: false,
-    pingTimeout: 10000,
-    pingInterval: 5000
-  });
+  // const io = new SocketServer(server, {
+  //   cors: {
+  //     origin: dev ? 'http://localhost:3000' : ['https://hobbyvb.com','https://npfrontend-opp7.vercel.app'],
+  //     methods: ['GET', 'POST']
+  //   },
+  //   path: '/api/socketio',
+  //   serveClient: false,
+  //   pingTimeout: 10000,
+  //   pingInterval: 5000
+  // });
 
   // Store io instance globally
-  global.io = io;
+  // global.io = io;
 
   // Socket.io connection handler
-  io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id);
-     // Disconnect if too many connections from same origin
-  const connections = Array.from(io.sockets.sockets.values())
-    .filter(s => s.handshake.headers.origin === socket.handshake.headers.origin);
+  // io.on('connection', (socket) => {
+  //   console.log('Client connected:', socket.id);
+  //    // Disconnect if too many connections from same origin
+  // const connections = Array.from(io.sockets.sockets.values())
+  //   .filter(s => s.handshake.headers.origin === socket.handshake.headers.origin);
   
-  if (connections.length > 3) { // Adjust threshold
-    socket.disconnect(true);
-    return;
-  }
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-    });
-  });
+  // if (connections.length > 3) { // Adjust threshold
+  //   socket.disconnect(true);
+  //   return;
+  // }
+  //   socket.on('disconnect', () => {
+  //     console.log('Client disconnected:', socket.id);
+  //   });
+  // });
 
   const port = process.env.PORT || 3001;
   server.listen(port, (err) => {
