@@ -1,6 +1,7 @@
 export interface Movie {
     id: number;
     categoryId: number;
+    type: string;
     categoryName?: string;
     title: string;
     year: number;

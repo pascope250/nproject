@@ -65,6 +65,8 @@ model movies {
   rating      Float
   description String
   poster      String
+  // type must be either TRANSLATED or ENGLISH
+  type        String     @default("TRANSLATED")
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @default(now())
   comments    comments[]

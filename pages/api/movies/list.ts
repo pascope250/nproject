@@ -49,6 +49,9 @@ export default async function handler(
         }
         // Get all movies with their categories
         const movies = await prisma.movies.findMany({
+          where:{
+            type: 'TRANSLATED'
+          },
           orderBy: { createdAt: 'desc' },
           take: 200,
           include: {
@@ -65,7 +68,7 @@ export default async function handler(
       year: movie.year,
       rating: movie.rating,
       description: movie.description,
-      poster: IMAGE_BASE_URL+'/'+movie.poster,
+      poster:  movie.poster.startsWith('http') ? movie.poster : IMAGE_BASE_URL+'/'+movie.poster,
       createdAt: movie.createdAt,
       source: movie.sources.map((source: any) => {
         return {

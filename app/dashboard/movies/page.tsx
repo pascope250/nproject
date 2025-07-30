@@ -90,6 +90,7 @@ export default function Movies() {
     const handleEdit = (movie: Movie) => {
       const modNewMoview = {
         id: movie.id,
+        type: movie.type,
         categoryId: movie.categoryId,
         title: movie.title,
         year: movie.year,
@@ -149,7 +150,7 @@ const onCustomButtom = (id: number) => {
               isOpen={isModalOpen}
               onClose={() => setIsModalOpen(false)}
               title={currentMovie ? "Edit Category" : "Add Category"}
-              size="lg"
+              size="xxl"
               footer={
                 <>
                   <button

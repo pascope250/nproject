@@ -5,6 +5,7 @@ import * as Yup from 'yup';
 
 export interface MovieFormData {
   categoryId: number;
+  type: string;
   title: string;
   year: number;
   rating: number;
@@ -15,6 +16,7 @@ export interface MovieFormData {
 interface MovieFormProps {
   movie?: {
     categoryId: number;
+    type: string;
     title: string;
     year: number;
     rating: number;
@@ -55,6 +57,7 @@ export function MovieForm({ movie, categories, onSubmit }: MovieFormProps) {
   const formik = useFormik<MovieFormData>({
     initialValues: {
       categoryId: movie ? Number(movie.categoryId) : 0,
+      type: movie?.type || '',
       title: movie?.title || '',
       year: movie?.year || 0,
       rating: movie?.rating || 0,
@@ -76,6 +79,7 @@ export function MovieForm({ movie, categories, onSubmit }: MovieFormProps) {
   return (
     <form id="movie-form" onSubmit={formik.handleSubmit} className="space-y-4" autoComplete="on">
       {/* Category select */}
+      <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
       <div>
         <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
           Category *
@@ -97,6 +101,27 @@ export function MovieForm({ movie, categories, onSubmit }: MovieFormProps) {
         </select>
         {formik.touched.categoryId && formik.errors.categoryId && (
           <p className="mt-1 text-sm text-red-600">{formik.errors.categoryId}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="TypeId" className="block text-sm font-medium text-gray-700">
+          Type *
+        </label>
+        <select
+          id="TypeId"
+          name="type"
+          value={formik.values.type}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select Type</option>
+          <option value="TRANSLATED"> Translated</option>
+          <option value="ORIGINAL"> Original</option>
+        </select>
+        {formik.touched.type && formik.errors.type && (
+          <p className="mt-1 text-sm text-red-600">{formik.errors.type}</p>
         )}
       </div>
 
@@ -193,6 +218,7 @@ export function MovieForm({ movie, categories, onSubmit }: MovieFormProps) {
         {formik.touched.poster && formik.errors.poster && (
           <p className="mt-1 text-sm text-red-600">{formik.errors.poster}</p>
         )}
+      </div>
       </div>
     </form>
   );

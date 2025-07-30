@@ -11,7 +11,7 @@ interface ModalProps {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl'| 'xxl';
   overlayClassName?: string;
   contentClassName?: string;
   overlayOpacity?: number; // New prop for overlay opacity
@@ -35,6 +35,7 @@ export function Modal({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
+    xxl: 'max-w-2xl',
   };
 
   // Convert overlayOpacity (0-100) to 0-1 for rgba
