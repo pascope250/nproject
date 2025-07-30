@@ -50,6 +50,7 @@ export default async function handler(
         // Get all movies with their categories
         const movies = await prisma.movies.findMany({
           orderBy: { createdAt: 'desc' },
+          take: 200,
           include: {
             category: true,
             sources:true

@@ -1,16 +1,19 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '../../lib/prisma';
 import cache from '@/lib/redisCache';
+import fs from 'fs';
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
-import { v2 as cloudinary } from 'cloudinary';
+
+// Configure where to store uploaded images
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'posters');
 const PUBLIC_URL_BASE = '/posters';
-// Configure Cloudinary
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET 
-});
+
+// Ensure upload directory exists
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 export const config = {
   api: {
@@ -24,14 +27,14 @@ const ALLOWED_ORIGINS = [
   process.env.NEXT_FRONTEND_BASE,
   'https://npfrontend-opp7.vercel.app',
   'https://hobbyvb.com',
-  'http://localhost:3001',
-].filter(Boolean);
+  'http://localhost:3001', // Add more domains as needed
+].filter(Boolean); // Remove undefined values
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // --- Dynamic CORS Handling ---
+ // --- Dynamic CORS Handling ---
   const origin = req.headers.origin;
   if (origin && ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
@@ -39,15 +42,15 @@ export default async function handler(
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
+  // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
   // --- End CORS ---
-
   try {
     switch (req.method) {
       case 'POST': {
+        // Destructure and validate required fields
         const { title, categoryId, year, rating, description, poster } = req.body;
         
         if (!title || !categoryId || !year || !rating || !description || !poster) {
@@ -56,32 +59,32 @@ export default async function handler(
           });
         }
 
+        // Handle image upload
         let posterUrl = '';
         if (poster) {
           try {
+            // Example for base64 image - adjust based on your frontend implementation
             if (poster.startsWith('data:image')) {
-              const uploadResponse = await cloudinary.uploader.upload(poster, {
-                folder: 'movie-posters',
-                public_id: `poster-${uuidv4()}`,
-                overwrite: false,
-                transformation: [
-                  { width: 500, height: 750, crop: 'fill' },
-                  { quality: 'auto:best' }
-                ]
-              });
-              posterUrl = uploadResponse.secure_url;
+              const base64Data = poster.replace(/^data:image\/\w+;base64,/, '');
+              const buffer = Buffer.from(base64Data, 'base64');
+              const fileName = `poster-${uuidv4()}.jpg`;
+              const filePath = path.join(UPLOAD_DIR, fileName);
+              
+              await fs.promises.writeFile(filePath, buffer);
+              posterUrl = `${fileName}`;
             } else if (poster.startsWith('http')) {
+              // If it's already a URL (from CDN), use as-is
               posterUrl = poster;
             }
           } catch (uploadError) {
-            console.error('Cloudinary upload failed:', uploadError);
+            console.error('Image upload failed:', uploadError);
             return res.status(400).json({
               message: 'Failed to process image upload',
             });
           }
         }
-
-        const newMovie = await prisma.movies.create({
+        // Create new movie
+         await prisma.movies.create({
           data: { 
             title, 
             categoryId: Number(categoryId),
@@ -89,37 +92,40 @@ export default async function handler(
             rating: parseFloat(rating),
             description,
             poster: posterUrl,
+            // createdAt is automatic via Prisma @default(now())
           },
           include: {
-            category: true
+            category: true // Include related category data
           }
         });
-        
-        await cache.delete(cacheNameSpace.movie, cacheKeys.movie); 
-        return res.status(201).json(newMovie);
+         await cache.delete(cacheNameSpace.movie, cacheKeys.movie); 
+        return res.status(201).json({ 
+          message: 'Movie created successfully',
+        });
       }
 
       case 'GET': {
+        // Get all movies with their categories
         const movies = await prisma.movies.findMany({
           orderBy: { createdAt: 'desc' },
           include: {
             category: true
           }
         });
+        // add url on poster from local env
 
-        // Convert dates to ISO strings for JSON serialization
-        const formattedMovies = movies.map(movie => ({
-          ...movie,
-          createdAt: movie.createdAt.toISOString(),
-          // if not from cloudinary means not include cloudinary, just return the url
-          poster: movie.poster.startsWith('http') ? movie.poster : `${PUBLIC_URL_BASE}/${movie.poster}`
-        }));
+        movies.forEach((movie: any) => {
+          if (movie.poster) {
+            movie.poster = `${PUBLIC_URL_BASE}/${movie.poster}`;
+            movie.createdAt = movie.createdAt.toISOString();
+          }
+        });
 
-
-        return res.status(200).json(formattedMovies);
+        // save caches
+        return res.status(200).json(movies);
       }
-
       case 'PUT': {
+        // Update movie
         const { id, title, categoryId, year, rating, description, poster } = req.body;
 
         if (!id || !title || !categoryId || !year || !rating || !description) {
@@ -127,7 +133,7 @@ export default async function handler(
             message: 'All fields are required',
           });
         }
-
+        // Handle poster update if provided
         let updateData: any = {
           title,
           categoryId: Number(categoryId),
@@ -137,37 +143,17 @@ export default async function handler(
         };
 
         if (poster) {
-          try {
-            if (poster.startsWith('data:image')) {
-              // Upload new image to Cloudinary
-              const uploadResponse = await cloudinary.uploader.upload(poster, {
-                folder: 'movie-posters',
-                public_id: `poster-${uuidv4()}`,
-                transformation: [
-                  { width: 500, height: 750, crop: 'fill' },
-                  { quality: 'auto:best' }
-                ]
-              });
-              updateData.poster = uploadResponse.secure_url;
-
-              // Delete old image from Cloudinary if it exists
-              const oldMovie = await prisma.movies.findUnique({
-                where: { id: Number(id) }
-              });
-              if (oldMovie?.poster) {
-                const publicId = oldMovie.poster.split('/').pop()?.split('.')[0];
-                if (publicId) {
-                  await cloudinary.uploader.destroy(publicId).catch(console.error);
-                }
-              }
-            } else if (poster.startsWith('http')) {
-              updateData.poster = poster;
-            }
-          } catch (uploadError) {
-            console.error('Cloudinary upload failed:', uploadError);
-            return res.status(400).json({
-              message: 'Failed to process image upload',
-            });
+          if (poster.startsWith('data:image')) {
+            // Handle new image upload (same as POST)
+            const base64Data = poster.replace(/^data:image\/\w+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            const fileName = `poster-${uuidv4()}.jpg`;
+            const filePath = path.join(UPLOAD_DIR, fileName);
+            
+            await fs.promises.writeFile(filePath, buffer);
+            updateData.poster = `${fileName}`;
+          } else if (poster.startsWith('http')) {
+            updateData.poster = poster;
           }
         }
 
@@ -179,11 +165,13 @@ export default async function handler(
           }
         });
       
+        // delete caches
         await cache.delete(cacheNameSpace.movie, cacheKeys.movie);
         return res.status(200).json(updatedMovie);
       }
 
       case 'DELETE': {
+        // Delete movie - typically should use query params for DELETE
         const { id } = req.query;
 
         if (!id || Array.isArray(id)) {
@@ -192,6 +180,7 @@ export default async function handler(
           });
         }
 
+        // First get the movie to delete its poster file
         const movieToDelete = await prisma.movies.findUnique({
           where: { id: Number(id) }
         });
@@ -202,15 +191,14 @@ export default async function handler(
           });
         }
 
-        // Delete the poster from Cloudinary if it exists
-        if (movieToDelete.poster) {
+        // Delete the poster file if it exists and is locally stored
+        if (movieToDelete.poster && movieToDelete.poster.startsWith(PUBLIC_URL_BASE)) {
+          const fileName = movieToDelete.poster.split('/').pop();
+          const filePath = path.join(UPLOAD_DIR, fileName!);
           try {
-            const publicId = movieToDelete.poster.split('/').pop()?.split('.')[0];
-            if (publicId) {
-              await cloudinary.uploader.destroy(publicId);
-            }
+            await fs.promises.unlink(filePath);
           } catch (err) {
-            console.error('Failed to delete poster from Cloudinary:', err);
+            console.error('Failed to delete poster file:', err);
           }
         }
 
