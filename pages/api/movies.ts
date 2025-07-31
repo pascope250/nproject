@@ -48,7 +48,7 @@ export default async function handler(
   try {
     switch (req.method) {
       case 'POST': {
-        const { title, categoryId, year, rating, description, poster } = req.body;
+        const { title, categoryId,type, year, rating, description, poster } = req.body;
         
         if (!title || !categoryId || !year || !rating || !description || !poster) {
           return res.status(400).json({ 
@@ -84,6 +84,7 @@ export default async function handler(
         const newMovie = await prisma.movies.create({
           data: { 
             title, 
+            type,
             categoryId: Number(categoryId),
             year: Number(year),
             rating: parseFloat(rating),
@@ -96,6 +97,7 @@ export default async function handler(
         });
         
         await cache.delete(cacheNameSpace.movie, cacheKeys.movie); 
+        await cache.delete(cacheNameSpace.original, cacheKeys.original); 
         return res.status(201).json(newMovie);
       }
 
@@ -120,7 +122,7 @@ export default async function handler(
       }
 
       case 'PUT': {
-        const { id, title, categoryId, year, rating, description, poster } = req.body;
+        const { id, title, categoryId,type, year, rating, description, poster } = req.body;
 
         if (!id || !title || !categoryId || !year || !rating || !description) {
           return res.status(400).json({ 
@@ -130,6 +132,7 @@ export default async function handler(
 
         let updateData: any = {
           title,
+          type,
           categoryId: Number(categoryId),
           year: Number(year),
           rating: parseFloat(rating),
@@ -180,6 +183,7 @@ export default async function handler(
         });
       
         await cache.delete(cacheNameSpace.movie, cacheKeys.movie);
+        await cache.delete(cacheNameSpace.original, cacheKeys.original);
         return res.status(200).json(updatedMovie);
       }
 
@@ -219,6 +223,7 @@ export default async function handler(
         });
 
         await cache.delete(cacheNameSpace.movie, cacheKeys.movie);
+        await cache.delete(cacheNameSpace.original, cacheKeys.original);
         return res.status(204).end();
       }
 

@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 interface Movie {
   id: number;
   categoryId: number;
+  type: string;
   title: string;
   year: number;
   rating: number;

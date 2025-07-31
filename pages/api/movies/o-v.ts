@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import cache from '@/lib/redisCache';
 import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
+import { Movie } from '@/types/movie';
 
 const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
@@ -43,14 +44,14 @@ export default async function handler(
         // get all from caches
         // await cache.flush();
         // get all from caches
-        const cachedMovies = await cache.get(cacheNameSpace.movie, cacheKeys.movie);
+        const cachedMovies = await cache.get(cacheNameSpace.original, cacheKeys.original);
         if (cachedMovies) {
           return res.status(200).json(cachedMovies);
         }
         // Get all movies with their categories
         const movies = await prisma.movies.findMany({
           where: {
-            type: 'TRANSLATED'
+            type: 'ORIGINAL'
           },
           orderBy: { createdAt: 'desc' },
           take: 200,
@@ -60,16 +61,17 @@ export default async function handler(
           }
         });
         const newMovies = movies.map((movie: any) => {
-          return {
+            if(movie.type === 'ORIGINAL'){
+                return {
             id: movie.id,
             categoryId: movie.categoryId,
             type: movie.type,
-            categoryName: movie.category.name,
+            categoryName: movie.category?.name,
             title: movie.title,
             year: movie.year,
             rating: movie.rating,
             description: movie.description,
-            poster: movie.poster.startsWith('http') ? movie.poster : IMAGE_BASE_URL + '/' + movie.poster,
+            poster: movie.poster?.startsWith('http') ? movie.poster : IMAGE_BASE_URL + '/' + movie.poster,
             createdAt: movie.createdAt,
             source: movie.sources.map((source: any) => {
               return {
@@ -83,10 +85,11 @@ export default async function handler(
               }
             })
           }
+            }
         });
 
         // save to cache
-        await cache.save(cacheNameSpace.movie, cacheKeys.movie, newMovies, { ttl: 259200 });
+        await cache.save(cacheNameSpace.original, cacheKeys.original, newMovies, { ttl: 259200 });
         return res.status(200).json(newMovies);
       }
 

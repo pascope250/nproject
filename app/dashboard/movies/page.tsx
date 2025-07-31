@@ -21,13 +21,11 @@ export default function Movies() {
       name: category.name,
     }
   });
-
-  console.log(movies);
-  
   const newmovies = movies.map((movie) => {
     return{
       id: Number(movie.id),
       title: movie.title,
+      type: movie.type,
       categoryId: Number(movie.categoryId),
       poster: movie.poster,
       category: movie.category?.name,
@@ -54,6 +52,7 @@ export default function Movies() {
     }
   },
       { accessor: "category" as keyof Movie, header: "Category" },
+      { accessor: "type" as keyof Movie, header: "Type" },
       { accessor: "year" as keyof Movie, header: "Year" },
       { accessor: "rating" as keyof Movie, header: "Rating" },
       { accessor: "createdAt" as keyof Movie, header: "Created At" },
@@ -154,17 +153,19 @@ const onCustomButtom = (id: number) => {
               footer={
                 <>
                   <button
+                  disabled={loading}
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
                   <button
+                  disabled={loading}
                     type="submit"
                     form="movie-form"
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {currentMovie ? "Update" : "Save"}
+                    {loading ? 'Loading...' :  (currentMovie ? "Update" : "Save")}
                   </button>
                 </>
               }
