@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import prisma from '@/lib/prisma';
 import cache from '@/lib/redisCache';
 import { cacheKeys, cacheNameSpace } from '@/types/cacheType';
+import { Prisma } from '@prisma/client';
 
 const IMAGE_BASE_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/posters`;
 
@@ -40,46 +41,56 @@ export default async function handler(
     try {
         switch (req.method) {
             case 'GET': {
-                const { query } = req.query; // Get search query from URL params
+  const { query } = req.query;
 
-                // Try to get cached movies first
+  // Validate and sanitize the query
+  const searchTerm = query?.toString().trim().toLowerCase() || '';
 
-                // Get all movies with their categories
-                const movies = await prisma.movies.findMany({
-                    orderBy: { createdAt: 'desc' },
-                    take: 10,
-                    include: {
-                        category: true,
-                        sources: true
-                    }
-                });
+  // Build the database query with proper typing
+  const whereCondition: Prisma.moviesWhereInput = searchTerm 
+    ? {
+        OR: [
+          { title: { contains: searchTerm, mode: 'insensitive' as const } },
+          { description: { contains: searchTerm, mode: 'insensitive' as const } },
+          { category: { name: { contains: searchTerm, mode: 'insensitive' as const } } },
+          ...(isNaN(Number(searchTerm)) ? [] : [{ year: Number(searchTerm) }])
+        ]
+      }
+    : {};
 
-                // Transform movies data
-                const newMovies = movies.map((movie: any) => ({
-                    id: movie.id,
-                    categoryId: movie.categoryId,
-                    type: movie.type,
-                    categoryName: movie.category.name,
-                    title: movie.title,
-                    description: movie.description || '', // Ensure description exists for search
-                    year: movie.year,
-                    rating: movie.rating,
-                    poster: movie.poster.startsWith('http') ? movie.poster : IMAGE_BASE_URL + '/' + movie.poster,
-                    createdAt: movie.createdAt,
-                }));
+  // Get movies with pagination and search filtering at database level
+  const movies = await prisma.movies.findMany({
+    where: whereCondition,
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    include: {
+      category: {
+        select: {
+          name: true
+        }
+      },
+      sources: true
+    }
+  });
 
-                // Apply search filter if query exists
-                const filteredMovies = query
-                    ? newMovies.filter(movie =>
-                        movie.title.toLowerCase().includes(query.toString().toLowerCase()) ||
-                        (movie.description && movie.description.toLowerCase().includes(query.toString().toLowerCase())) ||
-                        (movie.categoryName && movie.categoryName.toLowerCase().includes(query.toString().toLowerCase())) ||
-                        movie.year.toString().includes(query.toString())
-                    )
-                    : newMovies;
+  // Transform movies data
+  const transformedMovies = movies.map((movie) => ({
+    id: movie.id,
+    categoryId: movie.categoryId,
+    type: movie.type,
+    categoryName: movie.category.name,
+    title: movie.title,
+    description: movie.description || '',
+    year: movie.year,
+    rating: movie.rating,
+    poster: movie.poster.startsWith('http') 
+      ? movie.poster 
+      : `${IMAGE_BASE_URL}/${movie.poster}`,
+    createdAt: movie.createdAt,
+  }));
 
-                return res.status(200).json(filteredMovies);
-            }
+  return res.status(200).json(transformedMovies);
+}
 
             default:
                 res.setHeader('Allow', ['GET']);
